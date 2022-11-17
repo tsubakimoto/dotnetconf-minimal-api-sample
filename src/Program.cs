@@ -34,7 +34,15 @@ var users = app.MapGroup("/users");
 users.MapGet("/{id:int}", (int id, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
-    return new User { Id = id, Name = $"name {id}" };
+
+    if (0 < id)
+    {
+        return Results.Ok(new User { Id = id, Name = $"name {id}" });
+    }
+    else
+    {
+        return Results.BadRequest(new { Error = "This ID is invalid." });
+    }
 });
 
 app.Run();
