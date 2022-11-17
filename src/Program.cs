@@ -1,4 +1,6 @@
-using api;
+using api.Models;
+
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +10,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add In-Memory Database
+builder.Services.AddDbContext<MinimalDbContext>(options =>
+    options.UseInMemoryDatabase("minimalapisample"));
 
 var app = builder.Build();
 
@@ -22,6 +28,14 @@ app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+// Seeding In-Memory Database
+using (var serviceScope = app.Services.CreateScope())
+{
+    var services = serviceScope.ServiceProvider;
+    var context = services.GetRequiredService<MinimalDbContext>();
+    context.Database.EnsureCreated();
+}
+
 app.MapControllers();
 
 // Minimal Apis
@@ -31,37 +45,35 @@ app.MapPut("/", () => "This is a PUT");
 app.MapDelete("/", () => "This is a DELETE");
 
 var users = app.MapGroup("/users");
-users.MapGet("/{id:int}", (int id, ILogger<Program> logger) =>
+
+users.MapGet("/", async (MinimalDbContext dbContext) =>
+    await dbContext.Users.ToListAsync());
+
+users.MapGet("/{id:int}", async (int id, MinimalDbContext dbContext, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
 
-    if (100 < id)
-    {
-        return Results.BadRequest(new { Error = "This ID is too large." });
-    }
-    else if (0 < id)
-    {
-        return Results.Ok(new User { Id = id, Name = $"name {id}" });
-    }
-    else
-    {
-        return Results.NotFound(new { Error = "This ID is notfound." });
-    }
+    var user = await dbContext.FindAsync<User>(id);
+    return user is null
+        ? Results.NotFound(new { Error = "This ID is notfound." })
+        : Results.Ok(user);
 });
 
-users.MapPost("/",
-    (User? user, ILogger<Program> logger) =>
+users.MapPost("/", async (User? user, MinimalDbContext dbContext, ILogger<Program> logger) =>
+{
+    if (user is null)
     {
-        // https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.results
-        if (user is null)
-        {
-            return Results.BadRequest("Who are you?");
-        }
-        else
-        {
-            logger.LogInformation(user.ToString());
-            return Results.Created($"/users/{user.Id}", user);
-        }
-    });
+        return Results.BadRequest("Who are you?");
+    }
+
+    logger.LogInformation(user.ToString());
+
+    var addedEntity = dbContext.Users.Add(user);
+    dbContext.SaveChanges();
+
+    return addedEntity is null
+        ? Results.BadRequest("Failed to add.")
+        : Results.Created($"/users/{addedEntity.Entity.Id}", addedEntity.Entity);
+});
 
 app.Run();
