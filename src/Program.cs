@@ -30,7 +30,8 @@ app.MapPost("/", () => "This is a POST");
 app.MapPut("/", () => "This is a PUT");
 app.MapDelete("/", () => "This is a DELETE");
 
-app.MapGet("/users/{id:int}", (int id, ILogger<Program> logger) =>
+var users = app.MapGroup("/users");
+users.MapGet("/{id:int}", (int id, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
     return new User { Id = id, Name = $"name {id}" };
