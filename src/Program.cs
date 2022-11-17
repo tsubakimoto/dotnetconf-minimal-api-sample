@@ -35,13 +35,17 @@ users.MapGet("/{id:int}", (int id, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
 
-    if (0 < id)
+    if (100 < id)
+    {
+        return Results.BadRequest(new { Error = "This ID is too large." });
+    }
+    else if (0 < id)
     {
         return Results.Ok(new User { Id = id, Name = $"name {id}" });
     }
     else
     {
-        return Results.BadRequest(new { Error = "This ID is invalid." });
+        return Results.NotFound(new { Error = "This ID is notfound." });
     }
 });
 
