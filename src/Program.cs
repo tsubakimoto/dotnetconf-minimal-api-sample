@@ -1,10 +1,12 @@
 using api.Models;
+using api.Services;
 
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -46,8 +48,10 @@ app.MapDelete("/", () => "This is a DELETE");
 
 var users = app.MapGroup("/users");
 
-users.MapGet("/", async (MinimalDbContext dbContext) =>
-    await dbContext.Users.ToListAsync());
+//users.MapGet("/", async (MinimalDbContext dbContext) =>
+//    await dbContext.Users.ToListAsync());
+users.MapGet("/", async (IUserService userService) =>
+    await userService.ListUsersAsync());
 
 users.MapGet("/{id:int}", async (int id, MinimalDbContext dbContext, ILogger<Program> logger) =>
 {
