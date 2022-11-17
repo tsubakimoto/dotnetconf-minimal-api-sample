@@ -49,4 +49,19 @@ users.MapGet("/{id:int}", (int id, ILogger<Program> logger) =>
     }
 });
 
+users.MapPost("/",
+    (User? user, ILogger<Program> logger) =>
+    {
+        // https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.http.results
+        if (user is null)
+        {
+            return Results.BadRequest("Who are you?");
+        }
+        else
+        {
+            logger.LogInformation(user.ToString());
+            return Results.Created($"/users/{user.Id}", user);
+        }
+    });
+
 app.Run();
