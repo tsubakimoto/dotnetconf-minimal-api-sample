@@ -22,4 +22,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Minimal Apis
+app.MapGet("/", () => "This is a GET");
+app.MapPost("/", () => "This is a POST");
+app.MapPut("/", () => "This is a PUT");
+app.MapDelete("/", () => "This is a DELETE");
+
 app.Run();
