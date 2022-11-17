@@ -11,4 +11,6 @@ public class UserService : IUserService
     public UserService(MinimalDbContext dbContext) => _dbContext = dbContext;
 
     public async Task<List<User>> ListUsersAsync() => await _dbContext.Users.ToListAsync();
+
+    public async Task<User?> GetByIdAsync(int id) => await _dbContext.FindAsync<User>(id);
 }

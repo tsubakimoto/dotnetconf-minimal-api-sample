@@ -53,11 +53,20 @@ var users = app.MapGroup("/users");
 users.MapGet("/", async (IUserService userService) =>
     await userService.ListUsersAsync());
 
-users.MapGet("/{id:int}", async (int id, MinimalDbContext dbContext, ILogger<Program> logger) =>
+//users.MapGet("/{id:int}", async (int id, MinimalDbContext dbContext, ILogger<Program> logger) =>
+//{
+//    logger.LogInformation("on '/users/{id}'", id);
+
+//    var user = await dbContext.FindAsync<User>(id);
+//    return user is null
+//        ? Results.NotFound(new { Error = "This ID is notfound." })
+//        : Results.Ok(user);
+//});
+users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
 
-    var user = await dbContext.FindAsync<User>(id);
+    var user = await userService.GetByIdAsync(id);
     return user is null
         ? Results.NotFound(new { Error = "This ID is notfound." })
         : Results.Ok(user);
