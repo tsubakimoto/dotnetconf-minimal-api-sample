@@ -1,6 +1,7 @@
 using api.Models;
 using api.Services;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,34 +25,44 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // Seeding In-Memory Database
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<MinimalDbContext>();
+    context.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
-// Seeding In-Memory Database
-using (var serviceScope = app.Services.CreateScope())
-{
-    var services = serviceScope.ServiceProvider;
-    var context = services.GetRequiredService<MinimalDbContext>();
-    context.Database.EnsureCreated();
-}
-
 app.MapControllers();
 
 // Minimal Apis
-app.MapGet("/", () => "This is a GET");
-app.MapPost("/", () => "This is a POST");
-app.MapPut("/", () => "This is a PUT");
-app.MapDelete("/", () => "This is a DELETE");
+app.MapGet("/", () => "This is a GET"); // HTTP GET
+app.MapPost("/", () => "This is a POST"); // HTTP POST
+app.MapPut("/", () => "This is a PUT"); // HTTP PUT
+app.MapDelete("/", () => "This is a DELETE"); // HTTP DELETE
+
+// app.MapGet("/users",
+//     async (MinimalDbContext dbContext) =>
+//         await dbContext.Users.ToListAsync());
 
 var users = app.MapGroup("/users");
 
-//users.MapGet("/", async (MinimalDbContext dbContext) =>
-//    await dbContext.Users.ToListAsync());
+// users.MapGet("/",
+//     async (MinimalDbContext dbContext) =>
+//         await dbContext.Users.ToListAsync());
+
 users.MapGet("/", async (IUserService userService) =>
     await userService.ListUsersAsync());
+
+// users.MapGet("/{id:int}",
+//     async (int id, MinimalDbContext dbContext) =>
+//         await dbContext.Users.FindAsync(id) is User user
+//             ? Results.Ok(user)
+//             : Results.NotFound()
+//     );
 
 //users.MapGet("/{id:int}", async (int id, MinimalDbContext dbContext, ILogger<Program> logger) =>
 //{
@@ -62,6 +73,7 @@ users.MapGet("/", async (IUserService userService) =>
 //        ? Results.NotFound(new { Error = "This ID is notfound." })
 //        : Results.Ok(user);
 //});
+
 users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
@@ -71,6 +83,15 @@ users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Progr
         ? Results.NotFound(new { Error = "This ID is notfound." })
         : Results.Ok(user);
 });
+
+// users.MapPost("/",
+//     async ([FromBody] User user, [FromServices] MinimalDbContext dbContext) =>
+//     {
+//         dbContext.Users.Add(user);
+//         await dbContext.SaveChangesAsync();
+
+//         return Results.Created($"/users/{user.Id}", user);
+//     });
 
 users.MapPost("/", async (User? user, MinimalDbContext dbContext, ILogger<Program> logger) =>
 {
