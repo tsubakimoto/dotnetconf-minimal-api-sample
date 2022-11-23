@@ -1,3 +1,5 @@
+// https://github.com/captainsafia/TrainingApi/blob/main/TrainingApi/IEndpointConventionBuilderExtensions.cs
+
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
