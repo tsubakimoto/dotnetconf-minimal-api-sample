@@ -1,8 +1,9 @@
 using api.Models;
 using api.Services;
 
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,10 +14,19 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.Configure<SwaggerGeneratorOptions>(options =>
+{
+    options.InferSecuritySchemes = true;
+});
 
 // Add In-Memory Database
 builder.Services.AddDbContext<MinimalDbContext>(options =>
     options.UseInMemoryDatabase("minimalapisample"));
+
+// Add authentication and authorization
+builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("AdminsOnly", b => b.RequireClaim("admin", "true")));
 
 var app = builder.Build();
 
@@ -34,6 +44,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -43,6 +54,10 @@ app.MapGet("/", () => "This is a GET"); // HTTP GET
 app.MapPost("/", () => "This is a POST"); // HTTP POST
 app.MapPut("/", () => "This is a PUT"); // HTTP PUT
 app.MapDelete("/", () => "This is a DELETE"); // HTTP DELETE
+
+app.MapGet("/admin", () => "You are Administrator")
+    .RequireAuthorization("AdminsOnly")
+    .EnableOpenApiWithAuthentication();
 
 // app.MapGet("/users",
 //     async (MinimalDbContext dbContext) =>
