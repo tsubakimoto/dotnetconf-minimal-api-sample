@@ -1,6 +1,7 @@
 using api.Models;
 using api.Services;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -108,21 +109,44 @@ users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Progr
 //         return Results.Created($"/users/{user.Id}", user);
 //     });
 
-users.MapPost("/", async (User? user, MinimalDbContext dbContext, ILogger<Program> logger) =>
-{
-    if (user is null)
-    {
-        return Results.BadRequest("Who are you?");
-    }
+// users.MapPost("/",
+//     async ([FromBody] User user,
+//             [FromServices] MinimalDbContext dbContext,
+//             [FromServices] ILogger<Program> logger) =>
+//     {
+//         if (user is null)
+//         {
+//             return Results.BadRequest("Who are you?");
+//         }
+//         if (string.IsNullOrWhiteSpace(user.Name))
+//         {
+//             return Results.BadRequest("Name is required.");
+//         }
+//         if (user.Name.Equals("admin", StringComparison.OrdinalIgnoreCase))
+//         {
+//             return Results.BadRequest("This name is reserved.");
+//         }
 
-    logger.LogInformation(user.ToString());
+//         if (await dbContext.Users.AnyAsync(u => u.Name == user.Name))
+//         {
+//             return Results.BadRequest("This user is already exists.");
+//         }
 
-    var addedEntity = dbContext.Users.Add(user);
-    dbContext.SaveChanges();
+//         logger.LogInformation(user.ToString());
 
-    return addedEntity is null
-        ? Results.BadRequest("Failed to add.")
-        : Results.Created($"/users/{addedEntity.Entity.Id}", addedEntity.Entity);
-});
+//         dbContext.Users.Add(user);
+//         await dbContext.SaveChangesAsync();
+
+//         return Results.Created($"/users/{user.Id}", user);
+//     })
+//     .RequireAuthorization("AdminsOnly")
+//     .EnableOpenApiWithAuthentication();
+
+users.MapPost("/",
+    async ([FromBody] User user,
+            [FromServices] IUserService userService) =>
+        await userService.CreateAsync(user))
+    .RequireAuthorization("AdminsOnly")
+    .EnableOpenApiWithAuthentication();
 
 app.Run();
