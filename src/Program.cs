@@ -1,3 +1,4 @@
+using api;
 using api.Models;
 using api.Services;
 
@@ -60,6 +61,9 @@ app.MapGet("/admin", () => "You are Administrator")
     .RequireAuthorization("AdminsOnly")
     .EnableOpenApiWithAuthentication();
 
+app.MapGet("/array", (string[] tags) =>
+    $"count:{tags.Count()}, tag1:{tags[0]}, tag2:{tags[1]}");
+
 // app.MapGet("/users",
 //     async (MinimalDbContext dbContext) =>
 //         await dbContext.Users.ToListAsync());
@@ -90,7 +94,8 @@ users.MapGet("/", async (IUserService userService) =>
 //        : Results.Ok(user);
 //});
 
-users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Program> logger) =>
+users.MapGet("/{id:int}",
+   async (int id, IUserService userService, ILogger<Program> logger) =>
 {
     logger.LogInformation("on '/users/{id}'", id);
 
@@ -99,6 +104,17 @@ users.MapGet("/{id:int}", async (int id, IUserService userService, ILogger<Progr
         ? Results.NotFound(new { Error = "This ID is notfound." })
         : Results.Ok(user);
 });
+
+// users.MapGet("/{id:int}",
+//     async ([AsParameters] UserDetailsRequest request) =>
+// {
+//     request.Logger.LogInformation("on '/users/{id}'", request.Id);
+
+//     var user = await request.UserService.GetByIdAsync(request.Id);
+//     return user is null
+//         ? Results.NotFound(new { Error = "This ID is notfound." })
+//         : Results.Ok(user);
+// });
 
 // users.MapPost("/",
 //     async ([FromBody] User user, [FromServices] MinimalDbContext dbContext) =>
