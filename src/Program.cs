@@ -95,15 +95,21 @@ users.MapGet("/", async (IUserService userService) =>
 //});
 
 users.MapGet("/{id:int}",
-   async (int id, IUserService userService, ILogger<Program> logger) =>
-{
-    logger.LogInformation("on '/users/{id}'", id);
+    async (int id, IUserService userService, ILogger<Program> logger) =>
+    {
+        logger.LogInformation("on '/users/{id}'", id);
 
-    var user = await userService.GetByIdAsync(id);
-    return user is null
-        ? Results.NotFound(new { Error = "This ID is notfound." })
-        : Results.Ok(user);
-});
+        var user = await userService.GetByIdAsync(id);
+        return user is null
+            ? Results.NotFound(new { Error = "This ID is notfound." })
+            : Results.Ok(user);
+    })
+    .WithOpenApi(generatedOperation =>
+    {
+        var parameter = generatedOperation.Parameters[0];
+        parameter.Description = "This is user ID";
+        return generatedOperation;
+    });
 
 // users.MapGet("/{id:int}",
 //     async ([AsParameters] UserDetailsRequest request) =>
