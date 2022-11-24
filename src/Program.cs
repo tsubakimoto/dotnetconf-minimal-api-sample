@@ -171,4 +171,13 @@ users.MapPost("/",
     .RequireAuthorization("AdminsOnly")
     .EnableOpenApiWithAuthentication();
 
+var foods = app.MapGroup("/foods")
+    .RequireAuthorization("AdminsOnly")
+    .EnableOpenApiWithAuthentication();
+foods.MapGet("/", () => "...");
+foods.MapGet("/{id:int}", () => "...");
+foods.MapPost("/", () => "...");
+foods.MapPut("/", () => "...");
+foods.MapDelete("/", () => "...");
+
 app.Run();
